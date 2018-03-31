@@ -1,0 +1,2028 @@
+#LyX 2.2 created this file. For more info see http://www.lyx.org/
+\lyxformat 508
+\begin_document
+\begin_header
+\save_transient_properties true
+\origin unavailable
+\textclass article
+\begin_preamble
+\renewcommand\[{\begin{equation}}
+\renewcommand\]{\end{equation}} 
+\end_preamble
+\use_default_options true
+\maintain_unincluded_children false
+\language english
+\language_package default
+\inputencoding auto
+\fontencoding global
+\font_roman "times" "default"
+\font_sans "lmss" "default"
+\font_typewriter "lmtt" "default"
+\font_math "auto" "auto"
+\font_default_family default
+\use_non_tex_fonts false
+\font_sc false
+\font_osf false
+\font_sf_scale 100 100
+\font_tt_scale 100 100
+\graphics default
+\default_output_format default
+\output_sync 0
+\bibtex_command default
+\index_command default
+\paperfontsize default
+\spacing single
+\use_hyperref false
+\papersize default
+\use_geometry true
+\use_package amsmath 1
+\use_package amssymb 1
+\use_package cancel 1
+\use_package esint 1
+\use_package mathdots 1
+\use_package mathtools 1
+\use_package mhchem 1
+\use_package stackrel 1
+\use_package stmaryrd 1
+\use_package undertilde 1
+\cite_engine basic
+\cite_engine_type default
+\biblio_style plain
+\use_bibtopic false
+\use_indices false
+\paperorientation portrait
+\suppress_date false
+\justification true
+\use_refstyle 1
+\index Index
+\shortcut idx
+\color #008000
+\end_index
+\leftmargin 2cm
+\topmargin 2cm
+\rightmargin 2cm
+\bottommargin 2cm
+\secnumdepth 3
+\tocdepth 3
+\paragraph_separation indent
+\paragraph_indentation default
+\quotes_language english
+\papercolumns 2
+\papersides 1
+\paperpagestyle default
+\tracking_changes false
+\output_changes false
+\html_math_output 0
+\html_css_as_file 0
+\html_be_strict false
+\end_header
+
+\begin_body
+
+\begin_layout Title
+Stream Detector Software Manual
+\end_layout
+
+\begin_layout Section
+Description of the problem
+\end_layout
+
+\begin_layout Standard
+A set of points 
+\begin_inset Formula $(x,y)$
+\end_inset
+
+ in a square window contains a uniform background upon which an overdensity
+ is superimposed that has a linear shape; we refer to this overdensity as
+ a 
+\emph on
+stream
+\emph default
+ and the points themselves as 
+\emph on
+stars
+\emph default
+.
+ We wish to estimate (1) the probability that the set of stars 
+\begin_inset Formula $(x,y)$
+\end_inset
+
+ contains a stream, and (2) the geometrical parameters of the stream as
+ well as its relative amplitude.
+ 
+\end_layout
+
+\begin_layout Section
+Significance in astronomy
+\end_layout
+
+\begin_layout Standard
+The Milky Way galaxy is surrounded by a large number (dozens known) of dwarf
+ galaxies.
+ Due to dynamical friction (Chandra), such galaxies occasionally fall into
+ the Milky Way; this causes them to be transformed from a nearly spherical
+ shape to an elongated shape, eventually developing very long tails of stars
+ in a phenomenon called tidal disruption.
+ The tails of the disrupted dwarf galaxies contain stars streaming from
+ that galaxy's core out toward the Milky Way's halo, and they can be observed
+ as lines running across the night sky.
+ These are called 
+\emph on
+tidal streams
+\emph default
+.
+ Their observation, however, is not a trivial matter.
+ Since dwarf galaxies contain only very few stars to begin with (compared
+ to the Milky Way), the number of stars in tidal streams is very small compared
+ to the background.
+ Thus, tidal streams are too faint certainly to observe with the naked eye,
+ but telescopic data often requires careful analysis to reveal their presence.
+ A census of tidal streams is important for the understanding of the history
+ of the formation of the Milk Way galaxy, and by extension the assembly
+ of galaxies in general.
+\end_layout
+
+\begin_layout Standard
+Data features other that the stars' positions on the sky can help to distinguish
+ between stars belonging to tidal streams and background stars.
+ For example, in a small section of the sky, stars belonging to one stream
+ should be roughly equidistant from the observer on the Earth, compared
+ to the background stars which are scattered in distance.
+ Measuring the distance is not trivial, it could be done for individual
+ stars through the parallax method (which required several observational
+ epochs) or in a statistical way.
+ Stars from a single stream should also be moving in space as a group, and
+ if kinematic data can be obtained, this could help distinguish them from
+ the background.
+\begin_inset Note Note
+status collapsed
+
+\begin_layout Plain Layout
+GAIA
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+Here however we focus on the case where only the position on the sky (i.e.
+ the right ascension and declination) is known for each star.
+ An observation is divided into square pieces in an arbitrary way, each
+ such square (henceforth, a window) represents a possible small segment
+ of a stream.
+ The coordinates are normalized such that they range from 
+\begin_inset Formula $-0.5$
+\end_inset
+
+ to 
+\begin_inset Formula $+0.5$
+\end_inset
+
+ in both axes.
+\end_layout
+
+\begin_layout Section
+Algorithm
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status open
+
+\begin_layout Plain Layout
+\align center
+\begin_inset Graphics
+	filename flowchart.pdf
+	scale 125
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Flowchart of the parameter estimation of a single sample.
+ Blue lines and text represent variables that are part of the output.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Subsection
+Preparatory steps
+\end_layout
+
+\begin_layout Standard
+The algorithm requires large quantities of mock data to be generated that
+ could be discarded after the preparatory steps are completed.
+ There is no need to perform these steps as we already performed them and
+ the data needed are already found in the data folder of the software.
+ These steps should be repeated as needed if the program is modified or
+ repurposed.
+\end_layout
+
+\begin_layout Standard
+The mock data generation has three distinct phases: (1) generating 
+\begin_inset Quotes eld
+\end_inset
+
+blanks
+\begin_inset Quotes erd
+\end_inset
+
+ (i.e.
+ samples containing background only) for the purpose of estimating the mean
+ of counts in each element of the pair count matrix and the standard deviations,
+ (2) generating blanks for the purpose of estimating the distribution of
+ the noise, and (3) generating samples with streams for the purpose of training
+ an artificial neural network (ANN).
+ The idea behind the first two phases is explained in Section XXX, and the
+ idea behind the third phase is explained in Section XXX.
+\end_layout
+
+\begin_layout Subsubsection
+Background generation
+\end_layout
+
+\begin_layout Standard
+The program 
+\family typewriter
+GenerateBackground.py
+\family default
+ generates realizations of a uniform distribution in the observing window
+ for a particular number of stars 
+\begin_inset Formula $N$
+\end_inset
+
+.
+ For each sample, the pair count matrix 
+\begin_inset Formula $H_{\mathrm{bg}}$
+\end_inset
+
+ is generated, but neither the 
+\begin_inset Formula $(x,y)$
+\end_inset
+
+ data nor 
+\begin_inset Formula $H$
+\end_inset
+
+ are actually saved for each realization.
+ Instead, an 
+\shape smallcaps
+ascii
+\shape default
+ file is created that has a name of the form 
+\family typewriter
+bg-N-n.dat
+\family default
+ (where 
+\family typewriter
+N
+\family default
+ is the number of stars, and 
+\family typewriter
+n
+\family default
+ is a serial number for the file).
+ It contains a header with the number of realizations followed by a table
+ of size 
+\begin_inset Formula $64^{2}\times2$
+\end_inset
+
+ with the first column representing 
+\begin_inset Formula $H_{\mathrm{bg}}$
+\end_inset
+
+, the second representing 
+\begin_inset Formula $S_{\mathrm{bg}}$
+\end_inset
+
+, and each row representing an element in the flattened matrices.
+ The file is updated continuously, so no harm is done if the program stops.
+ The size of each file is 184 kilobyte (binary).
+ An example of the usage is
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+python GenerateBackground.py 1000 50000
+\end_layout
+
+\begin_layout Standard
+\noindent
+This generates 50000 realizations with 
+\begin_inset Formula $N=1000$
+\end_inset
+
+.
+ It is recommended to generate a very large number of samples so that 
+\begin_inset Formula $H_{\mathrm{bg}}$
+\end_inset
+
+ and 
+\begin_inset Formula $S_{\mathrm{bg}}$
+\end_inset
+
+ are sufficiently smooth, we used 
+\begin_inset Formula $4\times10^{5}$
+\end_inset
+
+ samples.
+ As for the value of 
+\begin_inset Formula $N$
+\end_inset
+
+, at least two values should be used, one representing the minimum and the
+ other the maximum number of stars acceptable for the program.
+ It is better to use logarithmically sampled values between the minimum
+ and the maximum; we used 
+\begin_inset Formula $N=500$
+\end_inset
+
+, 1000, \SpecialChar ldots
+, 8000.
+\end_layout
+
+\begin_layout Standard
+The program first tries to write to the file 
+\family typewriter
+bg-N-0.dat
+\family default
+ in the data folder, if it already exists then the serial number is increased
+ until a new file can be created, so it is easy to parallelize the process
+ by calling multiple instances of the program.
+ After enough samples have been accumulated for the desired values of 
+\begin_inset Formula $N$
+\end_inset
+
+, the files generated by multiple instances should be consolidated by invoking
+ the command
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+python CombineBackground.py
+\end_layout
+
+\begin_layout Standard
+\noindent
+This causes all 
+\family typewriter
+bg-N-n.dat
+\family default
+ files in the data folder to be consolidated to files with the names 
+\family typewriter
+bg-N.dat
+\family default
+.
+ The original files (with 
+\family typewriter
+-n
+\family default
+) should be removed manually.
+ The files 
+\family typewriter
+bg-N.dat
+\family default
+ may not be discarded at any stage.
+\end_layout
+
+\begin_layout Subsubsection
+Noise distribution
+\end_layout
+
+\begin_layout Standard
+The 
+\begin_inset Formula $H_{\mathrm{bg}}$
+\end_inset
+
+ and 
+\begin_inset Formula $S_{\mathrm{bg}}$
+\end_inset
+
+ matrices calculated above will now be used on a new set of blank samples
+ to generate the noise parameter 
+\begin_inset Formula $\delta$
+\end_inset
+
+ as explained in Section XX by invoking a command of the form
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+python NoiseStatistics1.py 1000 50000
+\end_layout
+
+\begin_layout Standard
+\noindent
+where like before, the first parameter is 
+\begin_inset Formula $N$
+\end_inset
+
+ and the second is the number of samples to be generated.
+ The number 
+\begin_inset Formula $N$
+\end_inset
+
+ should match each of the values used in the previous step; the number of
+ samples should still be quite large, we used 
+\begin_inset Formula $10^{5}$
+\end_inset
+
+.
+ The files generated are named 
+\family typewriter
+noisesamples-N-n.dat
+\family default
+, each contains a simple 
+\shape smallcaps
+ascii
+\shape default
+ table with the first column a serial number of the sample and the second
+ number is the 
+\begin_inset Formula $\delta$
+\end_inset
+
+ value.
+ As new rows are appended at the end of the file, the program could be stopped
+ at any time; the size of these files could reach a few megabytes depending
+ on the number of samples.
+ As before, files from the different instances of the program are consolidated
+ by the command
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+python CombineNoise.py
+\end_layout
+
+\begin_layout Standard
+\noindent
+The next sub-step is to calculate the cumulative distribution of 
+\begin_inset Formula $\delta$
+\end_inset
+
+ for each value of 
+\begin_inset Formula $N$
+\end_inset
+
+, this is done by invoking
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+python NoiseStatistics2.py
+\end_layout
+
+\begin_layout Standard
+\noindent
+This program reads all the 
+\family typewriter
+noisesamples-N.dat
+\family default
+ files in the data folder, calculates the cumulative distribution and records
+ data that can later be used to interpolate and extrapolate it; these data
+ are written to the file 
+\family typewriter
+noise-statistics.dat
+\family default
+.
+ After this program is executed, all files with the names 
+\family typewriter
+noisesamples-*.dat
+\family default
+ may be discarded.
+\end_layout
+
+\begin_layout Subsubsection
+Sample generation
+\end_layout
+
+\begin_layout Standard
+In the previous two steps, 
+\begin_inset Quotes eld
+\end_inset
+
+blank
+\begin_inset Quotes erd
+\end_inset
+
+ samples containing only background stars were generated and discarded after
+ the relevant information was extracted.
+ Now we generate samples containing streams as explained in Section XX,
+ the pair count matrix and the stream parameters are saved for each sample,
+ which means that the files can grow quite large; the 
+\begin_inset Formula $(x,y)$
+\end_inset
+
+ coordinates are not saved.
+ The data is stored in the Hierarchical Data Format version 5 (HDF5) with
+ files by the name 
+\family typewriter
+streams-n.h5
+\family default
+ (where 
+\family typewriter
+n
+\family default
+ is again a serial number for parallel execution).
+ Sample generation is performed by the command of the form
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+python SampleGenerator.py 4096
+\end_layout
+
+\begin_layout Standard
+where the only commandline argument is the number of samples to be generated
+ by this instance; the minimum and maximum values of 
+\begin_inset Formula $N_{\mathrm{bg}}$
+\end_inset
+
+ are read from the configuration file 
+\family typewriter
+streams.conf
+\family default
+, and the maximum number of 
+\begin_inset Formula $N=N_{\mathrm{bg}}+N_{\mathrm{fg}}$
+\end_inset
+
+ is deduced from the previous steps.
+ The HDF5 files could easily be corrupted if the program writing the file
+ exits without closing the file (i.e.
+ crashes).
+ We attempt to reduce the risk of that by minimizing the amount of time
+ the file is open: we buffer 32 samples at the time, and only update the
+ file when the buffer is full, closing it when the update is complete.
+ It is still not recommended to kill the program once it is running.
+ Notice that the files are much larger in this case; we generated 65536
+ samples and the total size of the data was 2.2 gigabyte.
+ Unlike before, there is no need to consolidate all the files generated
+ by different instances of the program.
+\end_layout
+
+\begin_layout Subsubsection
+Neural network training
+\end_layout
+
+\begin_layout Standard
+The last step before the preparation is complete is to train the artificial
+ neural network (ANN) with the dataset generated in the previous step.
+ This is done with the command
+\end_layout
+
+\begin_layout Standard
+
+\family typewriter
+python ModelTraining.py
+\end_layout
+
+\begin_layout Standard
+There are no arguments, the program finds the stream data and trains the
+ ANN, saving the network architecture as well as weights and biases to the
+ file 
+\family typewriter
+model.h5
+\family default
+, also in the HDF5 format.
+ The python file contains hardcoded network architecture as well as other
+ hyperparameters.
+ After the training is complete, the files 
+\family typewriter
+stream-*.h5
+\family default
+ may be deleted.
+\end_layout
+
+\begin_layout Subsection
+Processing a sample
+\end_layout
+
+\begin_layout Standard
+A flowchart of the code is shown in Fig.
+ XXX.
+ The input is a set of 
+\begin_inset Formula $N$
+\end_inset
+
+ points 
+\begin_inset Formula $(x,y)$
+\end_inset
+
+.
+ The first task is to calculate the pair count matrix 
+\begin_inset Formula $H$
+\end_inset
+
+, which is has 
+\begin_inset Formula $64\times64$
+\end_inset
+
+ elements.
+ The next task is to calculate the 
+\begin_inset Formula $p$
+\end_inset
+
+-value as described in Section XXX.
+ If the 
+\begin_inset Formula $p$
+\end_inset
+
+-value is larger than 0.1 (i.e.
+ there is more than 10% chance that the sample contains only background),
+ then the code returns that the sample could not be processed.
+ If 
+\begin_inset Formula $p\leq0.1$
+\end_inset
+
+, the code proceeds to calculating the D2PC 
+\begin_inset Formula $\xi$
+\end_inset
+
+ by subtracting the background from 
+\begin_inset Formula $H$
+\end_inset
+
+ and dividing by it.
+ Then, three additional transforms of 
+\begin_inset Formula $\xi$
+\end_inset
+
+ are generated by rearranging its elements as explained in Section XXX,
+ which leaves us with four samples that could be fed into the (already trained)
+ ANN.
+ The ANN returns four values for each of the three geometrical parameters
+ 
+\begin_inset Formula $s$
+\end_inset
+
+, 
+\begin_inset Formula $b$
+\end_inset
+
+, and 
+\begin_inset Formula $w$
+\end_inset
+
+, which are averaged and their standard deviation is recorded as a proxy
+ for the error.
+ Then the geometrical parameters are fed into the match filtering system,
+ which uses the 
+\begin_inset Formula $(x,y)$
+\end_inset
+
+ to determine 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ as well as estimates the relative amplitude 
+\begin_inset Formula $A$
+\end_inset
+
+.
+\end_layout
+
+\begin_layout Subsubsection
+Testing
+\end_layout
+
+\begin_layout Section
+Stream parameters
+\end_layout
+
+\begin_layout Standard
+The window is a simple 2-dimensional square; we denote the coordinates as
+ 
+\begin_inset Formula $x$
+\end_inset
+
+ and 
+\begin_inset Formula $y$
+\end_inset
+
+, each of them ranges from 
+\begin_inset Formula $-0.5$
+\end_inset
+
+ to 
+\begin_inset Formula $+0.5$
+\end_inset
+
+.
+ The stream is the intersection of the square with a rectangle, which could
+ be described by three geometrical parameters: 
+\begin_inset Formula $\alpha$
+\end_inset
+
+, 
+\begin_inset Formula $b$
+\end_inset
+
+, and 
+\begin_inset Formula $w$
+\end_inset
+
+.
+ The angle 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ is formed between the long axis of the stream (i.e.
+ the rectangle) with the 
+\begin_inset Formula $x$
+\end_inset
+
+-axis; 
+\begin_inset Formula $b$
+\end_inset
+
+ is the distance of the central line of the stream from the origin; 
+\begin_inset Formula $w$
+\end_inset
+
+ is the width of the stream (i.e.
+ the short axis of the rectangle).
+ Two additional parameters are the number of background stars 
+\begin_inset Formula $N_{\mathrm{bg}}$
+\end_inset
+
+ (in the whole window), and the relative amplitude 
+\begin_inset Formula $A$
+\end_inset
+
+, which is the excess of stars in the stream area divided by the number
+ of stars expected from a uniform distribution in that area (this could
+ also be expressed by 
+\begin_inset Formula $N_{\mathrm{fg}}$
+\end_inset
+
+, the number of stream stars).
+\end_layout
+
+\begin_layout Standard
+The allowed range of each of the parameter is a subtle point.
+ For the training and testing of the software, we took 
+\begin_inset Formula $N_{\mathrm{bg}}$
+\end_inset
+
+ to range between 500 and 4000 and 
+\begin_inset Formula $A$
+\end_inset
+
+ to range between 0 and 1.
+ This often results in samples that do not contain any distinguishable stream
+ at all, but these are rejected anyway as explained in Section [[XX]].
+ The logic in choosing very low values of 
+\begin_inset Formula $N$
+\end_inset
+
+ to begin with is that we want to train the software to detect streams which
+ are very difficult to spot with the human eye; if 
+\begin_inset Formula $A$
+\end_inset
+
+ it significantly bigger than unity, it could be relatively easily identified
+ by other means.
+\end_layout
+
+\begin_layout Standard
+The geometrical parameters are constrained in a way that makes sure there
+ is one-to-one correspondence between a sample and the geometrical parameters.
+ Ambiguities can occur if the outer edge (outer with respect to the origin)
+ of the rectangle (stream) is outside the window.
+ This could be prevented by rejecting any sample generated where all four
+ vertices of the window are on the same side of that edge.
+ Another limit we imposed was that the surface area of the stream should
+ be less than half of the total; this prevents situations where nearly the
+ whole window is covered by stream stars.
+ This is not a critical limitation, the ANN could learn to deal with those
+ situations as well given that the samples are distinguishable enough from
+ a uniform distribution.
+\end_layout
+
+\begin_layout Standard
+return np.abs(np.sum(np.sign(-np.sin(alpha)*X + np.cos(alpha)*Y - (b+w/2))))
+ != 4.0
+\end_layout
+
+\begin_layout Standard
+[[maybe put a b/w graph to show the allowed values?]]
+\end_layout
+
+\begin_layout Section
+The directional 2-point correlation
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide true
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename Example.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+An example of a stream.
+ The left panel shows the observational window with the points representing
+ stars, the middle panel shows the pair count matrix 
+\begin_inset Formula $H$
+\end_inset
+
+ and the right column shows the directional 2-point correlation function
+ 
+\begin_inset Formula $\xi$
+\end_inset
+
+; both matrices have 
+\begin_inset Formula $64\times64$
+\end_inset
+
+ elements.
+ This sample contains 2000 background particles, the stream has geometrical
+ parameters of 
+\begin_inset Formula $\alpha=15^{\circ}$
+\end_inset
+
+, 
+\begin_inset Formula $b=0.125$
+\end_inset
+
+, and 
+\begin_inset Formula $w=0.25$
+\end_inset
+
+.
+ The relative amplitude 
+\begin_inset Formula $A=3$
+\end_inset
+
+ is much larger than the typical sample that was used for the training and
+ testing of the artificial neural network (there, 
+\begin_inset Formula $A$
+\end_inset
+
+ ranged between 0 and 1) but given here so that the stream and the features
+ of 
+\begin_inset Formula $\xi$
+\end_inset
+
+ are easily visible by eye.
+ The number of foreground stars is 1541 and the total 
+\begin_inset Formula $N=3541$
+\end_inset
+
+, which gives 
+\begin_inset Formula $N(N-1)/2\approx6.3\times10^{6}$
+\end_inset
+
+ pairs.
+ The white regions in 
+\begin_inset Formula $\xi$
+\end_inset
+
+ indicated combinations of 
+\begin_inset Formula $\theta$
+\end_inset
+
+ and 
+\begin_inset Formula $r$
+\end_inset
+
+ which cannot exist in a square window.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The concept of the correlation function is very useful in cosmology.
+ The (regular) 2-point correlation function is a function of some distance
+ 
+\begin_inset Formula $r$
+\end_inset
+
+, defined as the probability that two random galaxies in the universe are
+ be separated by that distance 
+\begin_inset Formula $r$
+\end_inset
+
+.
+ It is often defined with respect to a uniform distribution, so to represent
+ overdensity or clumping in different length scales, in the following way.
+ For a particular survey of galaxies, a mock catalog of galaxies is produced
+ given the survey's known observational biases.
+ The number count of galaxies in the mock catalog separated by a distance
+ between 
+\begin_inset Formula $r-\frac{1}{2}\Delta r$
+\end_inset
+
+ and 
+\begin_inset Formula $r+\frac{1}{2}\Delta r$
+\end_inset
+
+ (for 
+\begin_inset Formula $\Delta r\ll r$
+\end_inset
+
+) is counted and denoted 
+\begin_inset Formula $H_{\mathrm{bg}}(r)$
+\end_inset
+
+.
+ The the same counting is performed for the real galaxies in the survey
+ which yields some other function 
+\begin_inset Formula $H(r)$
+\end_inset
+
+.
+ Finally the 2-point correlation function may be defined as
+\begin_inset Formula 
+\[
+\xi=\frac{H-H_{\mathrm{bg}}}{H_{\mathrm{bg}}}.
+\]
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+For the purpose of cosmological surveys, galaxies are point particles, with
+ the relevant distances between them far larger than their physical sizes.
+ The same applies for surveys of stars in the Milky Way galaxy, but the
+ 2-point correlation function of individual stars in the Galaxy does not
+ carry a similar physical significance as that of galaxies in the universe.
+ Here we present an extension of the idea called directional 2-point correlation
+ (D2PC), which take into account clumping in both distance and direction.
+ The logic is that when a human looks for a tidal stream in a 2-dimensional
+ coordinate data, they will for clumping along certain angles of the observation
+al window.
+ Thus, it is reasonable that when the data is presented in this form, it
+ will be easier for an NN algorithm to interprert...
+ find stream or whatevs.
+ Then also for NN it is best to 
+\end_layout
+
+\begin_layout Standard
+We call 
+\begin_inset Formula $H$
+\end_inset
+
+ the pair count matrix
+\end_layout
+
+\begin_layout Section
+Background and noise analysis
+\end_layout
+
+\begin_layout Standard
+[[[maybe clarify that the backgound is not the noise, it is part of the
+ signal.
+ the noise is the statistical fluctuation in the position]]]While the ultimate
+ goal is estimating the geometrical parameters of a stream, an important
+ step is understanding whether a stream is present at all, or whether its
+ amplitude is large enough to be mathematically distinguishable from the
+ background.
+ This is important because the artificial neural network will always give
+ a prediction as an output (in our case, for the geometrical parameters)
+ even if the signal is too weak to deduce anything reliably.
+ Thus, we want an independent measure on the strength of the signal.
+ Qualitatively, we would like to estimate the 
+\begin_inset Formula $p$
+\end_inset
+
+-value of each sample, that is, the probability that it contains only background.
+ Our approach is to measure the deviation of the pair count matrix 
+\begin_inset Formula $H$
+\end_inset
+
+ of a particular sample with 
+\begin_inset Formula $N$
+\end_inset
+
+ stars from an idealized background using the following quantity:
+\begin_inset Formula 
+\[
+\delta=\mathrm{rms}\left[\frac{H-H_{\mathrm{bg}}(N)}{S_{\mathrm{bg}}(N)}\right]
+\]
+
+\end_inset
+
+where 
+\begin_inset Formula $H_{\mathrm{bg}}(N)$
+\end_inset
+
+ is the expectation value of the pair count matrix for 
+\begin_inset Formula $N$
+\end_inset
+
+ stars; 
+\begin_inset Formula $S_{\mathrm{bg}}(N)$
+\end_inset
+
+ is a matrix where each element is the standard deviation of the corresponding
+ element in 
+\begin_inset Formula $H_{\mathrm{bg}}$
+\end_inset
+
+.
+ The subtraction and division are element-wise operation, and rms is the
+ root mean square of all the matrix elements.
+ The quantity 
+\begin_inset Formula $\delta$
+\end_inset
+
+ should be close to unity if the sample contains only uniformly distributed
+ stars; a strong deviation from unity indicates the presence of non-uniformity
+ in the sample (which is not necessarily a stream, but it could be).
+ The exact distribution of 
+\begin_inset Formula $\delta$
+\end_inset
+
+ around unity is not trivial and has to be calculated numerically.
+ Once it is known, the 
+\begin_inset Formula $\delta$
+\end_inset
+
+-value calculated for a particular sample can be converted to a 
+\begin_inset Formula $p$
+\end_inset
+
+-value as described below.
+\end_layout
+
+\begin_layout Standard
+Another difficulty in this method is to calculate the standard deviation
+ matrix 
+\begin_inset Formula $S_{\mathrm{bg}}$
+\end_inset
+
+ in the first place.
+ The distribution of count values in every 
+\begin_inset Formula $(r,\theta)$
+\end_inset
+
+ bin is not trivial and its first two moments (i.e.
+ 
+\begin_inset Formula $H_{\mathrm{bg}}$
+\end_inset
+
+ and 
+\begin_inset Formula $S_{\mathrm{bg}}$
+\end_inset
+
+) also have to be estimated from a mock catalog of samples containing nothing
+ but background (uniformly distributes stars).
+ While the dependence of 
+\begin_inset Formula $H_{\mathrm{bg}}$
+\end_inset
+
+ on 
+\begin_inset Formula $N$
+\end_inset
+
+ is trivial, the dependence of 
+\begin_inset Formula $S_{\mathrm{bg}}$
+\end_inset
+
+ on 
+\begin_inset Formula $N$
+\end_inset
+
+ is not.
+ We generate background mock catalogs for five geometrically spaced values
+ of 
+\begin_inset Formula $N$
+\end_inset
+
+ between 500 and 8000, and found that each element in 
+\begin_inset Formula $S_{\mathrm{bg}}$
+\end_inset
+
+ can be fit very well by a power-law of 
+\begin_inset Formula $N$
+\end_inset
+
+, with the indices between 
+\series bold
+????
+\series default
+ and 
+\series bold
+????
+\series default
+.
+ The software has two modes of operation: it can calculate 
+\begin_inset Formula $S_{\mathrm{bg}}(N)$
+\end_inset
+
+ for an arbitrary value of 
+\begin_inset Formula $N$
+\end_inset
+
+ from the power-law fits on the background mock catalog, or to interpolate
+ it between the 
+\begin_inset Formula $N$
+\end_inset
+
+ values in the catalog.
+ We found that the latter to be slightly more reliable.
+\end_layout
+
+\begin_layout Standard
+Finally, to convert the 
+\begin_inset Formula $\delta$
+\end_inset
+
+-value of a specific sample to a 
+\begin_inset Formula $p$
+\end_inset
+
+-value we had to generate another set of samples containing only background
+ (for the same discrete values of 
+\begin_inset Formula $N_{\mathrm{bg}}$
+\end_inset
+
+).
+ For this new set, only 
+\begin_inset Formula $\delta$
+\end_inset
+
+ is recorded for each sample until a relatively smooth distribution is built.
+ The function 
+\begin_inset Formula $p(\delta)$
+\end_inset
+
+ is the complementary cumulative distribution of 
+\begin_inset Formula $\delta$
+\end_inset
+
+.
+ We construct it numerically by interpolation from 
+\begin_inset Formula $p(\delta)=0.5$
+\end_inset
+
+ (the median) and 
+\begin_inset Formula $p(\delta)\approx1.24\times10^{-2}$
+\end_inset
+
+ (the value corresponding to 2.5 standard deviations if it were a normal
+ distribution).
+ For the right tail of the distribution, we use an extrapolation.
+ The fit assumes that for large values of 
+\begin_inset Formula $\delta$
+\end_inset
+
+ the distribution is a log-normal one, and the fit parameters are obtained
+ between 
+\begin_inset Formula $1.24\times10^{-2}<p(\delta)<4.55\times10^{-2}$
+\end_inset
+
+ (between 2 and 2.5 
+\begin_inset Quotes eld
+\end_inset
+
+sigma
+\begin_inset Quotes erd
+\end_inset
+
+).
+ Here again, a non-trivial dependence on 
+\begin_inset Formula $N$
+\end_inset
+
+ occurs and we use interpolation.
+ 
+\end_layout
+
+\begin_layout Standard
+We note that the quality of this estimation is of no critical importance;
+ once the 
+\begin_inset Formula $p$
+\end_inset
+
+-value of a sample is lower than some threshold, it can be assumed that
+ a stream exists; we are not very interested in the marginal cases.
+ Other methods could be used to estimate the 
+\begin_inset Formula $p$
+\end_inset
+
+-value, e.g.
+ similarly to the methods described here but using the pair count in one
+ dimension only, or directly from the raw 
+\begin_inset Formula $(x,y)$
+\end_inset
+
+ data.
+ Machine learning techniques could also be used to classify samples based
+ on weather they are likely to contain a detectable stream or be pure background.
+\end_layout
+
+\begin_layout Section
+The angle
+\end_layout
+
+\begin_layout Standard
+The angle 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ ranges between 
+\begin_inset Formula $-180^{\circ}$
+\end_inset
+
+ and 
+\begin_inset Formula $+180^{\circ}$
+\end_inset
+
+, with each value giving a unique stream geometry.
+ A degeneracy is introduced when calculating the D2PC because the vector
+ displacement between two point in any pair forms an angle with the 
+\begin_inset Formula $x$
+\end_inset
+
+-axis of either 
+\begin_inset Formula $\theta$
+\end_inset
+
+ or 
+\begin_inset Formula $180^{\circ}-\theta$
+\end_inset
+
+, depending on which of the two points is chosen to be the head of the vector
+ [this should be explained in Sec XX].
+ Thus, the information encoded in the D2PC is of the angle 
+\begin_inset Formula $\alpha^{\prime}\equiv\alpha\mod180^{\circ}$
+\end_inset
+
+.
+ A difficulty arises when attempting to estimate the angle 
+\begin_inset Formula $\alpha^{\prime}$
+\end_inset
+
+ directly in the neural network by minimizing the loss 
+\begin_inset Formula $|\alpha_{\mathrm{pred}}^{\prime}-\alpha_{\mathrm{true}}^{\prime}|$
+\end_inset
+
+ [[use the word reward]].
+ Take for example a stream with 
+\begin_inset Formula $\alpha^{\prime}=1^{\circ}$
+\end_inset
+
+; its D2PC is in some sense closer to a stream with 
+\begin_inset Formula $\alpha^{\prime}=179^{\circ}$
+\end_inset
+
+ than it is to a stream with 
+\begin_inset Formula $\alpha^{\prime}=10^{\circ}$
+\end_inset
+
+.
+ If the NN predicts the former angle, the loss would be 
+\begin_inset Formula $178^{\circ}$
+\end_inset
+
+ but if it predicts the latter, the loss would be only 
+\begin_inset Formula $9^{\circ}$
+\end_inset
+
+.
+ This creates a situation where at the edges of the 
+\begin_inset Formula $\alpha^{\prime}$
+\end_inset
+
+ range the network is very confused and constantly gives bad predictions.
+ A solution could be to estimate a function of 
+\begin_inset Formula $\alpha^{\prime}$
+\end_inset
+
+ that wraps around at the edges, such as its sine.
+ This creates another degeneracy because 
+\begin_inset Formula $s\equiv\sin(\alpha^{\prime})=\sin(180^{\circ}-\alpha^{\prime})$
+\end_inset
+
+.
+ To summarize, the four possibilities are
+\begin_inset Formula 
+\[
+\alpha=\begin{cases}
+\arcsin s\\
+180^{\circ}-\arcsin s\\
+-\arcsin s\\
+\arcsin s-180^{\circ}
+\end{cases}
+\]
+
+\end_inset
+
+For example, an estimate of 
+\begin_inset Formula $s_{\mathrm{pred}}=0.5$
+\end_inset
+
+ would corresponds to 
+\begin_inset Formula $\alpha_{\mathrm{pred}}=\pm30^{\circ}$
+\end_inset
+
+ and 
+\begin_inset Formula $\pm150^{\circ}$
+\end_inset
+
+.
+ It is impossible to remove the first ambiguity discussed (between 
+\begin_inset Formula $\pm30^{\circ}$
+\end_inset
+
+ and 
+\begin_inset Formula $\mp150^{\circ}$
+\end_inset
+
+) using the D2PC data alone, but only by going back to the raw 
+\begin_inset Formula $(x,y)$
+\end_inset
+
+ data.
+ The second ambiguity (between 
+\begin_inset Formula $\pm30^{\circ}$
+\end_inset
+
+ and 
+\begin_inset Formula $\pm150^{\circ}$
+\end_inset
+
+) could be remedied by adding another output neuron to the network that
+ independently attempts to predict 
+\begin_inset Formula $\cos(\alpha^{\prime})$
+\end_inset
+
+ or just its sign.
+ This is however an unnecessary complication of the NN, and we opted for
+ a solution that removes both degeneracies at the same time as described
+ in Section XX.
+\end_layout
+
+\begin_layout Section
+Transformation of the D2PC
+\end_layout
+
+\begin_layout Standard
+we have 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ the standard gives us 
+\begin_inset Formula $H$
+\end_inset
+
+, the 
+\begin_inset Formula $s=0.26$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $\alpha+90^{\circ}$
+\end_inset
+
+ is shfting, we call it 
+\begin_inset Formula $H_{\mathrm{rot}}$
+\end_inset
+
+ we have 
+\begin_inset Formula $s=0.97$
+\end_inset
+
+ in other words 
+\begin_inset Formula $s_{\mathrm{rot}}=\sqrt{1-s^{2}}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Formula $180-\alpha$
+\end_inset
+
+ this gives us 
+\begin_inset Formula $\tilde{H}$
+\end_inset
+
+ which is the mirror of 
+\begin_inset Formula $H$
+\end_inset
+
+ we have 
+\begin_inset Formula $s=0.26$
+\end_inset
+
+ again, so 
+\begin_inset Formula $\tilde{s}=s$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+lastly we have 
+\begin_inset Formula $-90-\alpha$
+\end_inset
+
+ which gives us 
+\begin_inset Formula $\tilde{H}_{\mathrm{rot}}$
+\end_inset
+
+ we have 
+\begin_inset Formula $s=0.97$
+\end_inset
+
+ so 
+\begin_inset Formula $\tilde{s}_{rot}=s_{rot}$
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+if we had a circular window, we could do an 
+\begin_inset Quotes eld
+\end_inset
+
+infinite
+\begin_inset Quotes erd
+\end_inset
+
+ number of transformations
+\end_layout
+
+\begin_layout Standard
+since the ANN has different activation neurons for those 4 transforms, and
+ the training set contain only one picture, they are processed as 4 completely
+ independent pictured.
+ thus we get a better result by averaging them and also some estimate of
+ the error
+\end_layout
+
+\begin_layout Section
+Artificial neural network
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide true
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ANNTest.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The predicted (recovered) values versus the true values of the three geometrical
+ parameters which are the output of the artificial neural network shown
+ as density maps.
+ Since the parameters are not uniformly distributed (their histograms are
+ shown in the top panels), to normalize the results, we divided each pixel
+ in the maps by the number of (true) values in its column.
+ Each predicted value is the average of four permutations of an input sample.
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:ann-results"
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+To recover the geometrical parameters, we designed an artificial neural
+ network (ANN).
+ The input is the D2PC 
+\begin_inset Formula $\xi$
+\end_inset
+
+ which is a 
+\begin_inset Formula $64\times64$
+\end_inset
+
+ matrix, and the output is the three geometrical parameters 
+\begin_inset Formula $s$
+\end_inset
+
+, 
+\begin_inset Formula $b$
+\end_inset
+
+, and 
+\begin_inset Formula $w$
+\end_inset
+
+.
+ We first apply a mask to the input to remove the matrix elements where
+ the pair count matrix for a square window cannot be larger than zero, and
+ then the input is flattened.
+ This leaves us with 3324 input neurons and 3 output neurons.
+ Since the three output parameters are bound, they were normalized to the
+ range 
+\begin_inset Formula $[0,1]$
+\end_inset
+
+ and we used a sigmoid activation in the output layer.
+\end_layout
+
+\begin_layout Standard
+We tested multiple designs for the network, starting from very simple ones
+ (starting from a design with no hidden layers at all) and adding complexity
+ gradually.
+ Our final design is a multilayer perceptron network with two hidden layers:
+ the first with 1662 neurons and the second with 162 neurons.
+ In total there are 
+\begin_inset Formula $5\,796\,045$
+\end_inset
+
+ trainable parameters in this design.
+ The activation function for all hidden neurons was a rectified linear unit
+ (relu), testing various other options including a leaky relu did not improve
+ the results.
+ Making the network any deeper also did not improve the result.
+ Alternative designs that included 2-dimensional convolutionary layers performed
+ at most comparably to our chosen design, suggesting that an accuracy limit
+ has been reached.
+ The network was trained with 65536 samples for 150 epochs.
+ This was not terribly computationally expensive, and took approximately
+ an hour on a machine with a single modern GPU.
+ The loss function was defined as the mean of
+\begin_inset Formula 
+\[
+{\textstyle \frac{1}{3}}|s_{\mathrm{pred}}-s_{\mathrm{true}}|+{\textstyle \frac{\sqrt{2}}{3}}|b_{\mathrm{pred}}-b_{\mathrm{true}}|+{\textstyle \frac{\sqrt{2}}{3}}|w_{\mathrm{pred}}-w_{\mathrm{true}}|.
+\]
+
+\end_inset
+
+The 
+\begin_inset Formula $\sqrt{2}$
+\end_inset
+
+ factor comes from the allowed ranges of 
+\begin_inset Formula $b$
+\end_inset
+
+ and 
+\begin_inset Formula $w$
+\end_inset
+
+ (which is 
+\begin_inset Formula $1/\sqrt{2}$
+\end_inset
+
+ for both); it makes the network treat the three parameters roughly equally.
+\end_layout
+
+\begin_layout Standard
+The testing was performed with a different test of 65536 samples.
+ To increase the accuracy of the network, and be able to estimate the error
+ on each output, we put all four possible transformations (see Section XX)
+ of each sample through the ANN.
+ For each of the three output parameters, the average of the four predictions
+ was recorded as the predicted value for the sample, and their standard
+ deviation was recorded as the error.
+ The accuracy of the network is shown in Figure XXX.
+\end_layout
+
+\begin_layout Section
+Matched filtering
+\end_layout
+
+\begin_layout Standard
+The ANN described above can only estimate the parameter 
+\begin_inset Formula $s$
+\end_inset
+
+, which as noted in Section XX, could relate to the angle 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ in four different ways.
+ The two remaining tasks are to remove this 4-fold degeneracy, and to estimate
+ the relative amplitude 
+\begin_inset Formula $A$
+\end_inset
+
+.
+ This is done by constructing four simple stream-shaped filters corresponding
+ to the four possible values of 
+\begin_inset Formula $\alpha$
+\end_inset
+
+, and applying them to the raw 
+\begin_inset Formula $(x,y)$
+\end_inset
+
+ data.
+ The process is then to count the stars in each filter 
+\begin_inset Formula $N_{\mathrm{stream}}$
+\end_inset
+
+, and the option with the larger star count wins.
+ Then
+\begin_inset Formula 
+\begin{align*}
+N_{\mathrm{bg}} & =\frac{N_{\mathrm{tot}}-N_{\mathrm{stream}}}{1-a}\\
+N_{\mathrm{fg}} & =N_{\mathrm{stream}}-aN_{\mathrm{bg}}\\
+A & =\frac{N_{\mathrm{fg}}}{aN_{\mathrm{bg}}}
+\end{align*}
+
+\end_inset
+
+where 
+\begin_inset Formula $a$
+\end_inset
+
+ is the relative surface area of the stream in the window (calculated from
+ the predicted geometrical parameters).
+\end_layout
+
+\begin_layout Section
+Prediction results
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename AngleErrorHistogram.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+note that its logarithmic so actually first peak is ~23 time higher than
+ the second and ~400 higher than the third
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ATest.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+Same as figure XXX but for A, which is not estimated by the artificial neural
+ network directly, but from its results in combination with the raw 
+\begin_inset Formula $(x,y)$
+\end_inset
+
+ data.
+\begin_inset CommandInset label
+LatexCommand label
+name "fig:ann-results_A"
+
+\end_inset
+
+ colorbar is the same as that figure.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The results are shown in Fig.
+ 
+\begin_inset CommandInset ref
+LatexCommand ref
+reference "fig:ann-results"
+
+\end_inset
+
+.
+ The testing data set contained 65536 samples, and as noted in section XX,
+ each predicted value represents an average of the four transforms.
+ The average loss for this training set was 0.062 and the parameter estimations
+ have very little to no bias.
+ The success of estimating the angle 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ is shown in Fig.
+ XXX through the distribution of 
+\begin_inset Formula $|\alpha_{\mathrm{pred}}-\alpha|$
+\end_inset
+
+.
+ The strong peak around zero indicated that the procedure describes in Section
+ XXX is largely successful in removing the degeneracy and recovering the
+ correct value of 
+\begin_inset Formula $\alpha$
+\end_inset
+
+.
+ The second peak, which is 
+\begin_inset Formula $\sim22$
+\end_inset
+
+ times smaller, indicates that the recovering of 
+\begin_inset Formula $s$
+\end_inset
+
+ was successful, but the wrong value of 
+\begin_inset Formula $\alpha$
+\end_inset
+
+ has been chosen by the matched filters (e.g.
+ 
+\begin_inset Formula $\alpha=30^{\circ}$
+\end_inset
+
+ was recovered as 
+\begin_inset Formula $\alpha_{\mathrm{pred}}=-150^{\circ}$
+\end_inset
+
+).
+ The last peak, which is 
+\begin_inset Formula $\sim400$
+\end_inset
+
+ times smaller than the first, indicates confusion between angles very close
+ to 
+\begin_inset Formula $0^{\circ}$
+\end_inset
+
+ and 
+\begin_inset Formula $180^{\circ}$
+\end_inset
+
+, with again 
+\begin_inset Formula $s$
+\end_inset
+
+ recovered successfully.
+ The last parameter evaluated in our algorithm is the relative amplitude
+ 
+\begin_inset Formula $A$
+\end_inset
+
+, which is not directly measured by the ANN but by the matched filtering
+ system.
+ It is presented in Fig.
+ XXX.
+ The spread in this parameter is higher than the three geometrical parameters,
+ with the average of 
+\begin_inset Formula $|A_{\mathrm{pred}}-A|$
+\end_inset
+
+ being 0.125.
+\end_layout
+
+\begin_layout Section
+Error analysis
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide true
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename ANNTestErrors.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+very good estimate, unlike fig 1, we don't divide by the whatever.
+ log normal
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Standard
+The error estimate for each parameter can also be plotted as a function
+ of the real error; however it is more useful to invert the axes and use
+ logarithmic scaling, as shown in Fig.
+ XXX.
+ Let us denote the actual error in 
+\begin_inset Formula $s$
+\end_inset
+
+ as 
+\begin_inset Formula $s_{\mathrm{err}}\equiv|s_{\mathrm{pred}}-s_{\mathrm{true}}|$
+\end_inset
+
+ and the error estimate (the standard deviation of the predictions of the
+ four transforms) as 
+\begin_inset Formula $\hat{s}_{\mathrm{err}}$
+\end_inset
+
+ (and similarly for 
+\begin_inset Formula $b$
+\end_inset
+
+ and 
+\begin_inset Formula $w$
+\end_inset
+
+).
+ As we see in the figure, there is a relation with a large scatter between
+ 
+\begin_inset Formula $\hat{s}_{\mathrm{err}}$
+\end_inset
+
+ and 
+\begin_inset Formula $s_{\mathrm{err}}$
+\end_inset
+
+ but it is not an equality relation, which means that the error estimate
+ is biased.
+ The best fitting straight lines in logarithmic scale correspond to the
+ following relations, that could be used to correct for the bias in the
+ error estimate:
+\begin_inset Formula 
+\begin{align*}
+s_{\mathrm{err}} & =0.6384\,\hat{s}_{\mathrm{err}}^{0.8664}\\
+b_{\mathrm{err}} & =0.3241\,\hat{b}_{\mathrm{err}}^{0.7129}\\
+w_{\mathrm{err}} & =0.0638\,\hat{w}_{\mathrm{err}}^{0.2000}
+\end{align*}
+
+\end_inset
+
+where the equality sign above is taken to mean that this a fitting formula,
+ the actual values are scattered around this relation, which fixes the bias.
+ We note however that the bias correction does not affect the order of magnitude
+ of the error in the relevant range, and thus not very important for any
+ particular sample.
+ It may be helpful in the statistical sense.
+\end_layout
+
+\begin_layout Standard
+It is interesting to note that there is a simple relation between the 
+\begin_inset Formula $p$
+\end_inset
+
+-value of a sample (which is measured from the D2PC in an independent way
+ of the ANN) and the average error, as shown in Fig.
+ XXX.
+\end_layout
+
+\begin_layout Standard
+\begin_inset Float figure
+wide false
+sideways false
+status collapsed
+
+\begin_layout Plain Layout
+\begin_inset Graphics
+	filename SNR_Loss.pdf
+
+\end_inset
+
+
+\end_layout
+
+\begin_layout Plain Layout
+\begin_inset Caption Standard
+
+\begin_layout Plain Layout
+The average loss (defined in equation XXX) of the testing dataset in bins
+ of signal-to-noise ratio (alternatively, 
+\begin_inset Formula $p$
+\end_inset
+
+-value).
+ As expected, the neural networks performs better the stronger the signal
+ is, but note that while 
+\begin_inset Formula $p$
+\end_inset
+
+ drops by approximately 14 orders of magnitude, the average error only drops
+ by a factor of 
+\begin_inset Formula $\sim5$
+\end_inset
+
+.
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_inset
+
+
+\end_layout
+
+\end_body
+\end_document
